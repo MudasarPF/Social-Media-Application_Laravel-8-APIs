@@ -108,6 +108,14 @@ class AuthController extends Controller
         // Check email
         $user = User::where('email', $fields['email'])->first();
 
+
+        if($user == null)
+        {
+            return response([
+                'message' => 'User does not exist'
+            ]);
+        }
+
         if($user->email_verified_at == null)
         {
             return response([
