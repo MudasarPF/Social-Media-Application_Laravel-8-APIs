@@ -34,6 +34,16 @@ Route::post('/logout', [AuthController::class, 'logout']);
 Route::get('/EmailConfirmation/{email}/{token}', [AuthController::class, 'EmailConfirmation']);
 
 
+//Posts Routes
+Route::post('/posts', [PostController::class, 'create']);
+Route::get('/posts', [PostController::class, 'findAll']);
+Route::get('/posts/{id}', [PostController::class, 'findById']);
+Route::put('/posts/{id}', [PostController::class, 'update']);
+Route::post('/posts/{id}', [PostController::class, 'delete']);
+Route::post('/posts/{title}', [PostController::class, 'searchByTitle']);
+
+
+
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
