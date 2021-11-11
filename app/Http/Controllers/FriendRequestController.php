@@ -105,15 +105,16 @@ class FriendRequestController extends Controller
         //Get Id
         $userId = $decoded->data;
 
- 
+        //Person who sent the request
         $senderEmail =  FriendRequest::all()->where('sender_id' , $id)->first();
         
+        //Person who received the request
         $receiverEmail =  FriendRequest::all()->where('receiver_id' , $userId)->first();
+
 
 
         if(isset($senderEmail))
         {
-
             if($receiverEmail)
             {
                 if($receiverEmail-> status ==  true)
