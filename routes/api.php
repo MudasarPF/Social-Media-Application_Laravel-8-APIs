@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\FriendRequestController;
 use App\Http\Controllers\PostController;
+use App\Http\Controllers\UserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -38,8 +39,16 @@ Route::middleware(['Cauth'])->group(function () {
     Route::delete('/posts/{id}', [PostController::class, 'delete']);
     Route::post('/posts/{title}', [PostController::class, 'searchByTitle']);
 
+    //Users Routes
+    Route::get('/users/myprofile/{id}', [UserController::class, 'myProfile']);
+    Route::put('/users/update/{id}', [UserController::class, 'update']);
+    Route::delete('/users/delete/{id}', [UserController::class, 'delete']);
+    Route::post('/users/search/{name}', [UserController::class, 'searchByName']);
+
     //Friend Request
     Route::post('/sendRequest', [FriendRequestController::class, 'sendRequest']);
+    Route::get('/myRequests/{id}', [FriendRequestController::class, 'myRequests']);
+    Route::get('/acceptRequest/{id}', [FriendRequestController::class, 'acceptRequest']);
 });
 
 

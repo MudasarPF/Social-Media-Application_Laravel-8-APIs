@@ -71,22 +71,25 @@ class AuthController extends Controller
             ]
         );
 
+        //Create one time token
+        $tempToken = $this->createTempToken(time());
+
         //Create the user
         $user = User::create([
             'name' => $fields['name'],
             'email' => $fields['email'],
-            'password' => bcrypt($fields['password'])
+            'password' => bcrypt($fields['password']),
+            'remember_token' => $tempToken
         ]);
 
-        //Create one time token
-        $tempToken = $this->createTempToken(time());
+        //dd($tempToken);
 
         //Send Email
-        $url = url('api/EmailConfirmation/'. $fields['email'] . '/' . $tempToken);
+        $url = url('api/EmailConfirmation/' . $fields['email'] . '/' . $tempToken);
 
         Mail::to($fields['email'])->send(new ConfirmEmail($url, 'batalew787@ecofreon.com'));
 
-        return ['status' => 'Confirmation email has been sent. Please check your email'];
+        //return ['status' => 'Confirmation email has been sent. Please check your email'];
 
         $response = [
             'message' => 'User has been created successfully',
@@ -109,15 +112,13 @@ class AuthController extends Controller
         $user = User::where('email', $fields['email'])->first();
 
 
-        if($user == null)
-        {
+        if ($user == null) {
             return response([
                 'message' => 'User does not exist'
             ]);
         }
 
-        if($user->email_verified_at == null)
-        {
+        if ($user->email_verified_at == null) {
             return response([
                 'message' => 'Your email is not confirmed'
             ]);
@@ -187,19 +188,26 @@ class AuthController extends Controller
         ];
     }
 
-    public function EmailConfirmation($email)
+    public function EmailConfirmation($email , $token)
     {
         $userExists = User::where('email', $email)->first();
-        
-        if(!$userExists)
-        {
+
+        if (!$userExists) {
             return response([
                 'message' => 'Something went wrong!'
             ]);
         }
 
-        if($userExists->email_verified_at != null)
+        $userToken = $userExists->remember_token;
+
+        if($userToken != $token)
         {
+            return response([
+                'message' => 'You are not authorized to use this link'
+            ]);
+        }
+
+        if ($userExists->email_verified_at != null) {
             return response([
                 'message' => 'Your link has expired'
             ]);
