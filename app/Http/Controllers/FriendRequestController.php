@@ -47,11 +47,12 @@ class FriendRequestController extends Controller
             ]);
         }
 
-        /*Start working from here */
-        $receiverExists = FriendRequest::where('receiver_id', $fields['receiver_id'])->first();
-        $senderExists = FriendRequest::where('sender_id', $fields['receiver_id'])->first();
+        
+        $combinedQuery1 = FriendRequest::all()->where('sender_id', $userId)->where('receiver_id', $fields['receiver_id'])->first();
+        $combinedQuery2 = FriendRequest::all()->where('sender_id', $fields['receiver_id'])->where('receiver_id', $userId)->first();
 
-        if ($receiverExists == null && $senderExists == null) {
+
+        if ($combinedQuery1 == null && $combinedQuery2 == null) {
             //Store friend request in database
             $saveFriendRequest = FriendRequest::create([
                 'sender_id' => $userId,
@@ -62,9 +63,7 @@ class FriendRequestController extends Controller
             return response([
                 'message' => 'Request sent to ' . $userExists->name
             ]);
-        }
-        else
-        {
+        } else {
             return response([
                 'message' => 'Friend request is already pending'
             ]);
@@ -72,19 +71,34 @@ class FriendRequestController extends Controller
     }
 
 
-    public function myRequests($id)
+    public function myRequests(Request $request)
     {
-        $requests =  FriendRequest::all()->where('receiver_id' , $id);
+        //Get Bearer Token
+        $getToken = $request->bearerToken();
 
-        if((json_decode($requests)) == null)
-        {
+        if (!isset($getToken)) {
+            return response([
+                'message' => 'Bearer token not found'
+            ]);
+        }
+
+        //Decode
+        $decoded = JWT::decode($getToken, new Key('ProgrammersForce', 'HS256'));
+        //Get Id
+        $userId = $decoded->data;
+
+        $requestsReceived =  FriendRequest::all()->where('receiver_id', $userId);
+        $requestsSent =  FriendRequest::all()->where('sender_id', $userId);
+
+        if ((json_decode($requestsReceived)) == null && (json_decode($requestsSent)) == null) {
             return response([
                 'message' => 'You have no friend requests'
             ]);
-        }
-        else
-        {
-            return $requests;
+        } else {
+            return response([
+                'requests_sent' => $requestsSent,
+                'requests_received' => $requestsReceived
+            ]);
         }
     }
 
@@ -106,42 +120,109 @@ class FriendRequestController extends Controller
         $userId = $decoded->data;
 
         //Person who sent the request
-        $senderEmail =  FriendRequest::all()->where('sender_id' , $id)->first();
-        
+        //$senderEmail =  FriendRequest::all()->where('sender_id' , $id)->first();
+
         //Person who received the request
-        $receiverEmail =  FriendRequest::all()->where('receiver_id' , $userId)->first();
+        $receiverEmail =  FriendRequest::all()->where('receiver_id', $userId)->first();
 
 
+        //$combinedQuery = FriendRequest::all()->where(['sender_id' , $id] && ['receiver_id' , $userId])->first();
 
-        if(isset($senderEmail))
-        {
-            if($receiverEmail)
-            {
-                if($receiverEmail-> status ==  true)
-                {
+        $combinedQuery = FriendRequest::all()->where('sender_id', $id)->where('receiver_id', $userId)->first();
+
+
+        if (isset($combinedQuery)) {
+            if ($receiverEmail) {
+                if ($receiverEmail->status ==  true) {
                     return response([
                         'message' => 'Request already accepted'
                     ]);
                 }
-                
+
                 $receiverEmail->status = true;
                 $receiverEmail->save();
 
                 return response([
                     'message' => 'Request accepted'
                 ]);
-            }
-            else
-            {
+            } else {
                 return response([
                     'message' => 'You are not authorized to perform this action'
                 ]);
             }
-        }
-        else
-        {
+        } else {
             return response([
                 'message' => 'You do not have this particular request'
+            ]);
+        }
+    }
+
+
+    public function deleteRequest(Request $request, $id)
+    {
+        //Get Bearer Token
+        $getToken = $request->bearerToken();
+
+        if (!isset($getToken)) {
+            return response([
+                'message' => 'Bearer token not found'
+            ]);
+        }
+
+        //Decode
+        $decoded = JWT::decode($getToken, new Key('ProgrammersForce', 'HS256'));
+        //Get Id
+        $userId = $decoded->data;
+
+
+        //Get the row where sender is the passed Id and receiver is the loggedin user
+        $combinedQuery = FriendRequest::all()->where('sender_id', $id)->where('receiver_id', $userId)->where('status' , false)->first();
+
+
+        if (isset($combinedQuery)) {
+            $combinedQuery->delete();
+
+            return response([
+                'message' => 'Request deleted'
+            ]);
+        } else {
+            return response([
+                'message' => 'You are not allowed to perform this action'
+            ]);
+        }
+    }
+
+
+    public function removeFriend(Request $request, $id)
+    {
+        //Get Bearer Token
+        $getToken = $request->bearerToken();
+
+        if (!isset($getToken)) {
+            return response([
+                'message' => 'Bearer token not found'
+            ]);
+        }
+
+        //Decode
+        $decoded = JWT::decode($getToken, new Key('ProgrammersForce', 'HS256'));
+        //Get Id
+        $userId = $decoded->data;
+
+
+        //Get the row where sender is the passed Id and receiver is the loggedin user
+        $combinedQuery = FriendRequest::all()->where('sender_id', $id)->where('receiver_id', $userId)->where('status' , true)->first();
+
+
+        if (isset($combinedQuery)) {
+            $combinedQuery->delete();
+
+            return response([
+                'message' => 'You have removed a friend from your list'
+            ]);
+        } else {
+            return response([
+                'message' => 'You are not allowed to perform this action'
             ]);
         }
     }

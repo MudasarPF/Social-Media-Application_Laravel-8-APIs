@@ -19,8 +19,8 @@ class CreatePostsTable extends Migration
             $table->foreign('user_id')->references('id')->on('users');
             $table->string('title');
             $table->string('body');
-            $table->string('attachement')->nullable();
-            $table->string('privacy')->nullable();
+            $table->string('attachment')->nullable();
+            $table->string('privacy')->nullable()->default(0);
             $table->timestamps();
         });
     }

@@ -38,6 +38,7 @@ Route::middleware(['Cauth'])->group(function () {
     Route::put('/posts/{id}', [PostController::class, 'update']);
     Route::delete('/posts/{id}', [PostController::class, 'delete']);
     Route::post('/posts/{title}', [PostController::class, 'searchByTitle']);
+    Route::post('/posts/changePrivacy/{id}', [PostController::class, 'changePrivacy']);
 
     //Users Routes
     Route::get('/users/myprofile/{id}', [UserController::class, 'myProfile']);
@@ -47,8 +48,10 @@ Route::middleware(['Cauth'])->group(function () {
 
     //Friend Request
     Route::post('/sendRequest', [FriendRequestController::class, 'sendRequest']);
-    Route::get('/myRequests/{id}', [FriendRequestController::class, 'myRequests']);
+    Route::get('/myRequests', [FriendRequestController::class, 'myRequests']);
     Route::get('/acceptRequest/{id}', [FriendRequestController::class, 'acceptRequest']);
+    Route::get('/deleteRequest/{id}', [FriendRequestController::class, 'deleteRequest']);
+    Route::get('/removeFriend/{id}', [FriendRequestController::class, 'removeFriend']);
 });
 
 
