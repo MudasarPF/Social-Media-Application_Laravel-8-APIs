@@ -169,9 +169,9 @@ class AuthController extends Controller
         $decoded = JWT::decode($getToken, new Key('ProgrammersForce', 'HS256'));
 
         //Get Id
-        $userId = $decoded->data;
+        $getUserId = $decoded->data;
 
-        $userExists = Token::where('user_id', $userId)->first();
+        $userExists = Token::where('user_id', $getUserId)->first();
 
         if ($userExists) {
             $userExists->delete();

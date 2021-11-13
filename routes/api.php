@@ -47,7 +47,7 @@ Route::middleware(['Cauth'])->group(function () {
     Route::post('/users/search/{name}', [UserController::class, 'searchByName']);
 
     //Friend Request
-    Route::post('/sendRequest', [FriendRequestController::class, 'sendRequest']);
+    Route::post('/sendRequest/{id}', [FriendRequestController::class, 'sendRequest']);
     Route::get('/myRequests', [FriendRequestController::class, 'myRequests']);
     Route::get('/acceptRequest/{id}', [FriendRequestController::class, 'acceptRequest']);
     Route::get('/deleteRequest/{id}', [FriendRequestController::class, 'deleteRequest']);

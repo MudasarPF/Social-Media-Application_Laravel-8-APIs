@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\FriendRequest;
 use Illuminate\Http\Request;
 use App\Models\Post;
 use Firebase\JWT\JWT;
