@@ -12,6 +12,11 @@ use Firebase\JWT\Key;
 
 class FriendRequestController extends Controller
 {
+
+    /*
+        Function to send a request to another user
+        parameter: user_id
+    */
     public function sendRequest(Request $request, $id)
     {
         //Get Bearer Token
@@ -43,19 +48,16 @@ class FriendRequestController extends Controller
             ]);
         }
 
-        /* Old logic where i was using single table to store friend requests */
-        // $combinedQuery1 = FriendRequest::all()->where('sender_id', $userId)->where('receiver_id', $fields['receiver_id'])->first();
-        // $combinedQuery2 = FriendRequest::all()->where('sender_id', $fields['receiver_id'])->where('receiver_id', $userId)->first();
-
-
-
-        /* New logic using two different tables for sent and received requests */
+        /* 
+            Check if request has been to this user before
+                                OR
+            Request has been received from this user before
+        */
         $requestsSent = SentFriendRequest::all()->where('user_id', $userId)->where('receiver_id', $id)->first();
         $requestsReceived = ReceivedFriendRequest::all()->where('user_id', $userId)->where('sender_id', $id)->first();
 
         if ($requestsSent == null && $requestsReceived == null) {
             //Enter data in both tables
-
             $saveFriendRequest1 = SentFriendRequest::create([
                 'user_id' => $userId,
                 'receiver_id' => $id,
@@ -80,6 +82,9 @@ class FriendRequestController extends Controller
     }
 
 
+    /*
+        Function to show requests of the user
+    */
     public function myRequests(Request $request)
     {
         //Get Bearer Token
@@ -112,6 +117,11 @@ class FriendRequestController extends Controller
     }
 
 
+    /*
+        Function to accept a request received by the user.
+        Takes id of the user who sent the request as a parameter
+        parameter: user_id
+    */
     public function acceptRequest(Request $request, $id)
     {
         //Get Bearer Token
@@ -129,24 +139,16 @@ class FriendRequestController extends Controller
         $userId = $decoded->data;
 
 
-        /*
-        This commented code is for old the logic.
-        It will be removed at the appropriate time
-        I am keeping this code in case i need it later
-        
-        //Person who received the request
-        //$receiverEmail =  FriendRequest::all()->where('receiver_id', $userId)->first();
-
-        //Old Logic of one single table of requests
-        //$combinedQuery = FriendRequest::all()->where('sender_id', $id)->where('receiver_id', $userId)->first();
-        */
-
+        //Check if request has been received
         $requestsReceived =  ReceivedFriendRequest::all()->where('user_id', $userId)->where('sender_id', $id)->first();
+
+        //Get corresponding entry from sent request table too to change status in both tables
+        $requestsSent =  SentFriendRequest::all()->where('user_id', $id)->where('receiver_id', $userId)->first();
 
 
         if (isset($requestsReceived)) {
 
-            if ($requestsReceived->status ==  true) {
+            if ($requestsReceived->status ==  true && $requestsSent->status == true) {
                 return response([
                     'message' => 'Request already accepted'
                 ]);
@@ -156,13 +158,10 @@ class FriendRequestController extends Controller
             $requestsReceived->save();
 
             //Change status for sender too
-            $requestsSent =  SentFriendRequest::all()->where('user_id', $id)->first();
-            
             if (isset($requestsSent)) {
                 $requestsSent->status = true;
                 $requestsSent->save();
             }
-
 
             return response([
                 'message' => 'Request accepted'
@@ -172,40 +171,13 @@ class FriendRequestController extends Controller
                 'message' => 'You are not allowed to perform this action'
             ]);
         }
-
-
-        /*
-        I am keeping this code in case i need it later
-        */
-
-
-        // if (isset($requestsReceived)) {
-        //     if ($receiverEmail) {
-        //         if ($receiverEmail->status ==  true) {
-        //             return response([
-        //                 'message' => 'Request already accepted'
-        //             ]);
-        //         }
-
-        //         $receiverEmail->status = true;
-        //         $receiverEmail->save();
-
-        //         return response([
-        //             'message' => 'Request accepted'
-        //         ]);
-        //     } else {
-        //         return response([
-        //             'message' => 'You are not authorized to perform this action'
-        //         ]);
-        //     }
-        // } else {
-        //     return response([
-        //         'message' => 'You do not have this particular request'
-        //     ]);
-        // }
     }
 
 
+    /*
+        Function to delete a request either sent or recieved by you.
+        parameter: user_id
+    */
     public function deleteRequest(Request $request, $id)
     {
         //Get Bearer Token
@@ -221,11 +193,6 @@ class FriendRequestController extends Controller
         $decoded = JWT::decode($getToken, new Key('ProgrammersForce', 'HS256'));
         //Get Id
         $userId = $decoded->data;
-
-        /*
-        //Get the row where sender is the passed Id and receiver is the loggedin user
-        $combinedQuery = FriendRequest::all()->where('sender_id', $id)->where('receiver_id', $userId)->where('status', false)->first();
-        */
 
         $requestsReceived =  ReceivedFriendRequest::all()->where('user_id', $userId)->where('sender_id', $id)->where('status', false)->first();
 
@@ -263,6 +230,10 @@ class FriendRequestController extends Controller
     }
 
 
+    /*
+        Function to remove a friend from the list.
+        parameter: user_id
+    */
     public function removeFriend(Request $request, $id)
     {
         //Get Bearer Token
@@ -278,13 +249,6 @@ class FriendRequestController extends Controller
         $decoded = JWT::decode($getToken, new Key('ProgrammersForce', 'HS256'));
         //Get Id
         $userId = $decoded->data;
-
-
-        /*
-        Kept for later use
-        */
-        //Get the row where sender is the passed Id and receiver is the loggedin user
-        //$combinedQuery = FriendRequest::all()->where('sender_id', $id)->where('receiver_id', $userId)->where('status', true)->first();
 
 
         $requestsSent = SentFriendRequest::all()->where('user_id', $userId)->where('receiver_id', $id)->where('status', true)->first();
@@ -322,14 +286,3 @@ class FriendRequestController extends Controller
         ]);
     }
 }
-
-
-
-/*
-Middleware -> DONE
-NameConvention -> DONE
-Database naming convention -> DONE
-Migration relation ->  X
-Validation use form request -> X
-migrate:fresh -> DONE
-*/

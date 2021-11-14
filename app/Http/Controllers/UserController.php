@@ -9,6 +9,10 @@ use Firebase\JWT\Key;
 
 class UserController extends Controller
 {
+    /*
+        Returns user profile
+        parameter: user_id
+    */
     public function myProfile(Request $request, $id)
     {
         //Get Bearer Token
@@ -43,6 +47,11 @@ class UserController extends Controller
         }
     }
 
+
+
+    /*
+        update user's data
+    */
     public function update(Request $request, $id)
     {
         //Get Bearer Token
@@ -61,7 +70,7 @@ class UserController extends Controller
 
 
         //dd($request->all());
-        
+
         if ($userId == $id) {
             $user = User::find($id);
             $user->update($request->all());
@@ -76,6 +85,9 @@ class UserController extends Controller
     }
 
 
+    /*
+        delete user's data
+    */
     public function delete(Request $request, $id)
     {
         //Get Bearer Token
@@ -116,6 +128,9 @@ class UserController extends Controller
     }
 
 
+    /*
+        search user's by name
+    */
     public function searchByName($name)
     {
         return User::where('name', 'like', '%' . $name . '%')->get();

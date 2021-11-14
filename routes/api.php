@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CommentController;
 use App\Http\Controllers\FriendRequestController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\UserController;
@@ -24,12 +25,14 @@ use App\Http\Controllers\UserController;
 
 
 //Authentication routes
+//Public Routes
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout']);
 Route::get('/EmailConfirmation/{email}/{token}', [AuthController::class, 'EmailConfirmation']);
 
 //Grouped Middleware
+//Private Routes
 Route::middleware(['Cauth'])->group(function () {
     //Posts Routes
     Route::post('/posts', [PostController::class, 'create']);
@@ -52,9 +55,14 @@ Route::middleware(['Cauth'])->group(function () {
     Route::get('/acceptRequest/{id}', [FriendRequestController::class, 'acceptRequest']);
     Route::get('/deleteRequest/{id}', [FriendRequestController::class, 'deleteRequest']);
     Route::get('/removeFriend/{id}', [FriendRequestController::class, 'removeFriend']);
+
+
+    //Comments
+    Route::post('/comment/{id}', [CommentController::class, 'create']);
+    Route::put('/comment/{id}', [CommentController::class, 'update']);
+    Route::delete('/comment/{id}', [CommentController::class, 'delete']);
+    Route::get('/myComments', [CommentController::class, 'myComments']);
 });
-
-
 
 
 

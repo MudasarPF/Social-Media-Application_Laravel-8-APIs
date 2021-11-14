@@ -19,12 +19,11 @@ class AuthController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
-    {
-        //
-    }
 
-
+    /*
+        Function to create a JWT token
+        parameter: user_id
+    */
     function createToken($data)
     {
         $key = "ProgrammersForce";
@@ -42,6 +41,11 @@ class AuthController extends Controller
         return $jwt;
     }
 
+    /*
+        Function to create a temporary JWT token that is used to
+        verify user's account
+        parameter: time()
+    */
     function createTempToken($data)
     {
         $key = "ProgrammersForce";
@@ -59,7 +63,9 @@ class AuthController extends Controller
         return $jwt;
     }
 
-    //Register Action
+    /*
+        Function to create a new user
+    */
     public function register(Request $request)
     {
         //Validate the fields
@@ -82,14 +88,11 @@ class AuthController extends Controller
             'remember_token' => $tempToken
         ]);
 
-        //dd($tempToken);
 
         //Send Email
         $url = url('api/EmailConfirmation/' . $fields['email'] . '/' . $tempToken);
 
         Mail::to($fields['email'])->send(new ConfirmEmail($url, 'batalew787@ecofreon.com'));
-
-        //return ['status' => 'Confirmation email has been sent. Please check your email'];
 
         $response = [
             'message' => 'User has been created successfully',
@@ -101,6 +104,11 @@ class AuthController extends Controller
         return response($response, 201);
     }
 
+
+    /*
+        Function to login the user by assigning a token to it
+        parameter: user_id
+    */
     public function login(Request $request)
     {
         $fields = $request->validate([
@@ -160,6 +168,9 @@ class AuthController extends Controller
     }
 
 
+    /*
+        Function to logout the user by deleting its JWT token
+    */
     public function logout(Request $request)
     {
         //Get Bearer Token
@@ -188,7 +199,16 @@ class AuthController extends Controller
         ];
     }
 
-    public function EmailConfirmation($email , $token)
+
+
+    /*
+        Function to confirm the user registration by email
+        this function can be hit through the link sent to the user
+        to their email address
+        
+        parameter: user_id
+    */
+    public function EmailConfirmation($email, $token)
     {
         $userExists = User::where('email', $email)->first();
 
@@ -200,8 +220,7 @@ class AuthController extends Controller
 
         $userToken = $userExists->remember_token;
 
-        if($userToken != $token)
-        {
+        if ($userToken != $token) {
             return response([
                 'message' => 'You are not authorized to use this link'
             ]);

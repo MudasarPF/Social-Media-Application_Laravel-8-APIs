@@ -4,39 +4,104 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Post;
+use App\Models\ReceivedFriendRequest;
+use App\Models\SentFriendRequest;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 
+use function PHPUnit\Framework\isEmpty;
+
 class PostController extends Controller
 {
+
+    /*
+        Returns user and its friends post
+    */
     public function findAll(Request $request)
     {
-        return Post::all()->where('privacy', false);
+
+        //Get Bearer Token
+        $getToken = $request->bearerToken();
+
+        if (!isset($getToken)) {
+            return response([
+                'message' => 'Bearer token not found'
+            ]);
+        }
+
+        //Decode
+        $decoded = JWT::decode($getToken, new Key('ProgrammersForce', 'HS256'));
+
+        //Get Id
+        $userId = $decoded->data;
+
+
+
+        //Get friends of this user
+        $sentRequests = SentFriendRequest::all()->where('user_id', $userId)->where('status', true)->pluck('receiver_id');
+        $recievedRequests = ReceivedFriendRequest::all()->where('user_id', $userId)->where('status', true)->pluck('sender_id');
+
+
+        //Get Posts of friends
+        $friendsPost = Post::whereIn('user_id', $sentRequests)->orwhereIn('user_id', $recievedRequests)->orwhere('user_id', $userId)->orwhere('privacy', false)->get();
+
+
+        return $friendsPost;
     }
 
-    
-    public function findById($id)
+
+    /*
+        Function to find a post by id
+        returns if the post is yours, your friends or a public post
+        parameter: post_id
+    */
+    public function findById(Request $request, $id)
     {
+        //Get Bearer Token
+        $getToken = $request->bearerToken();
+
+        if (!isset($getToken)) {
+            return response([
+                'message' => 'Bearer token not found'
+            ]);
+        }
+
+        //Decode
+        $decoded = JWT::decode($getToken, new Key('ProgrammersForce', 'HS256'));
+
+        //Get Id
+        $userId = $decoded->data;
+
+        //Get friends of this user
+        $sentRequests = SentFriendRequest::all()->where('user_id', $userId)->where('status', true)->pluck('receiver_id')->toArray();
+        $recievedRequests = ReceivedFriendRequest::all()->where('user_id', $userId)->where('status', true)->pluck('sender_id')->toArray();
+
         $getPost = Post::find($id);
 
-        if (isset($getPost)) {
-            if ($getPost->privacy == false) {
+        //user_id of author of this post
+        $author = $getPost->user_id;
+
+
+        if (in_array($author, $sentRequests) || in_array($author, $recievedRequests) || $author == $userId || $getPost->privacy == false) {
+
+            if (isset($getPost)) {
                 return $getPost;
-            }
-            else
-            {
+            } else {
                 return response([
-                    'message' => 'No such public post found'
+                    'message' => 'No Post found'
                 ], 404);
             }
         } else {
             return response([
-                'message' => 'No Post found'
+                'message' => 'You are not allowed to access this post'
             ], 404);
         }
     }
 
 
+    /*
+        Function to create a post.
+    */
     public function create(Request $request)
     {
         //Get Bearer Token
@@ -81,6 +146,10 @@ class PostController extends Controller
 
 
 
+    /*
+        Function to update a post
+        parameter: post_id
+    */
     public function update(Request $request, $id)
     {
         //Get Bearer Token
@@ -127,6 +196,10 @@ class PostController extends Controller
     }
 
 
+    /*
+        Function to delete a post
+        parameter: post_id
+    */
     public function delete(Request $request, $id)
     {
         //Get Bearer Token
@@ -158,19 +231,23 @@ class PostController extends Controller
         ]);
     }
 
-
+    /*
+        Function to search a post by title
+    */
     public function searchByTitle($title)
     {
         return Post::where('title', 'like', '%' . $title . '%')->get();
     }
 
+
+
     /*
+    Function to change the privacy of a post
+    -----------------------------------
     Post privacy is set false as default
-
     privacy->false means PUBLIC
-    privacy->true means PRIVATE (Only you and your friends)
+    privacy->true means PRIVATE
     */
-
     public function changePrivacy(Request $request, $id)
     {
         //Get Bearer Token
