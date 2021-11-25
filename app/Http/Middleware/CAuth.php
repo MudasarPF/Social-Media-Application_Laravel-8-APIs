@@ -29,8 +29,7 @@ class CAuth
             ]);
         }
         
-        $ifJSON =  $header = $request->header('Accept');
-
+        $ifJSON = $request->header('Accept');
         
         if($ifJSON != 'application/json')
         {
@@ -44,6 +43,10 @@ class CAuth
 
         //Get Id
         $userId = $decoded->data;
+
+        //
+        $request = $request->merge(array('user_id' => $userId));
+
 
         $userExists = Token::where('user_id', $userId)->first();
 

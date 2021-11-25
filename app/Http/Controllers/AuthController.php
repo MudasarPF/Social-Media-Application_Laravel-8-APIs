@@ -150,7 +150,7 @@ class AuthController extends Controller
                 ], 400);
             }
 
-            $token = $this->createToken($user->id);
+            $token = (new service)->createToken($user->id);
 
             //Store token in database
             $saveToken = Token::create([
