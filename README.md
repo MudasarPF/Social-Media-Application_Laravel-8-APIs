@@ -8,9 +8,9 @@
 </p>
 
 ## Practices followed in this project
-- Route files
-- Try Catch
-- Email in queue
+- Seperate route files
+- Try catch blocks
+- Queues for email
 - Helper Function
 - Generic Responses
 - Services
