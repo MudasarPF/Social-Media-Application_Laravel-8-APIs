@@ -13,6 +13,8 @@
 - Email in queue
 - Helper Function
 - Generic Responses
+- Services
+- Update user
 - Form Request Validation
 - Constants
 - Middleware
