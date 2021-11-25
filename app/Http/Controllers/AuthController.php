@@ -80,7 +80,7 @@ class AuthController extends Controller
             $fields = $request->validated();
 
             //Create one time token
-            $tempToken = (new servicegi)->createTempToken(time());
+            $tempToken = (new service)->createTempToken(time());
 
             //Create the user
             $user = User::create([
