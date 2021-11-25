@@ -26,19 +26,15 @@ class UserController extends Controller
                 $getUser = User::find($id);
 
                 if (isset($getUser)) {
-                    return new AuthResource($getUser);
+                    return response()->success(new AuthResource($getUser));
                 } else {
-                    return response([
-                        'message' => 'No user found'
-                    ], 404);
+                    return response()->error('No user found', 404);
                 }
             } else {
-                return response([
-                    'message' => 'You are not authorized to perform this action'
-                ], 401);
+                return response()->error('You are not authorized to perform this action', 401);
             }
         } catch (Throwable $e) {
-            return response(['message' => $e->getMessage()]);
+            return response()->error($e->getMessage());
         }
     }
 
@@ -61,14 +57,12 @@ class UserController extends Controller
                 $user->update($request->all());
                 $user->save();
 
-                return $user;
+                return response()->success($user);
             } else {
-                return response([
-                    'message' => 'You are not authorized to perform this action'
-                ], 401);
+                return response()->error('You are not authorized to perform this action', 401);
             }
         } catch (Throwable $e) {
-            return response(['message' => $e->getMessage()]);
+            return response()->error($e->getMessage());
         }
     }
 
@@ -86,25 +80,17 @@ class UserController extends Controller
                 $getUser = User::destroy($id);
 
                 if ($getUser == 1) {
-                    return response([
-                        'message' => 'User Deleted Succesfully'
-                    ]);
+                    return response()->success('User Deleted Succesfully');
                 } elseif ($getUser == 0) {
-                    return response([
-                        'message' => 'Already deleted'
-                    ]);
+                    return response()->error('Already deleted', 404);
                 } else {
-                    return response([
-                        'message' => 'No user found'
-                    ], 404);
+                    return response()->error('No user found', 404);
                 }
             } else {
-                return response([
-                    'message' => 'You are not authorized to perform this action'
-                ], 401);
+                return response()->error('You are not authorized to perform this action', 401);
             }
         } catch (Throwable $e) {
-            return response(['message' => $e->getMessage()]);
+            return response()->error($e->getMessage());
         }
     }
 
@@ -115,9 +101,9 @@ class UserController extends Controller
     public function searchByName($name)
     {
         try {
-            return AuthResource::collection(User::where('name', 'like', '%' . $name . '%')->get());
+            return response()->success(AuthResource::collection(User::where('name', 'like', '%' . $name . '%')->get()));
         } catch (Throwable $e) {
-            return response(['message' => $e->getMessage()]);
+            return response()->error($e->getMessage());
         }
     }
 }

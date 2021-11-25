@@ -57,14 +57,12 @@ class CommentController extends Controller
 
                 $user->notify(new CommentOnYourPost($commentCreated));
 
-                return $commentCreated;
+                return response()->success($commentCreated, 201);
             } else {
-                return response([
-                    'message' => 'You are not allowed to comment on this post'
-                ], 404);
+                return response()->error('You are not allowed to comment on this post', 401);
             }
         } catch (Throwable $e) {
-            return response(['message' => $e->getMessage()]);
+            return response()->error($e->getMessage());
         }
     }
 
@@ -83,21 +81,15 @@ class CommentController extends Controller
             $getComment = Comment::find($id);
 
             if (!$getComment) {
-                return response([
-                    'message' => 'Comment does not exist'
-                ]);
+                return response()->error('Comment does not exist', 404);
             }
 
             if (!isset($getToken)) {
-                return response([
-                    'message' => 'Bearer token not found'
-                ]);
+                return response()->error('Bearer token not found', 404);
             }
 
             if ($request->content == null) {
-                return response([
-                    'message' => 'content is required'
-                ]);
+                return response()->error('Content is required');
             }
 
             //Get friends of this user
@@ -131,19 +123,15 @@ class CommentController extends Controller
                     $comment->content = $request->content;
                     $comment->update();
 
-                    return $comment;
+                    return response()->success($comment, 204);
                 } else {
-                    return response([
-                        'message' => 'Something went wrong'
-                    ], 404);
+                    return response()->error('Something went wrong', 404);
                 }
             } else {
-                return response([
-                    'message' => 'You are not allowed to update this comment'
-                ], 404);
+                return response()->error('You are not allowed to update this comment', 401);
             }
         } catch (Throwable $e) {
-            return response(['message' => $e->getMessage()]);
+            return response()->error($e->getMessage());
         }
     }
 
@@ -162,15 +150,11 @@ class CommentController extends Controller
             $getComment = Comment::find($id);
 
             if (!$getComment) {
-                return response([
-                    'message' => 'Comment does not exist'
-                ]);
+                return response()->error('Comment does not exist', 404);
             }
 
             if (!isset($getToken)) {
-                return response([
-                    'message' => 'Bearer token not found'
-                ]);
+                return response()->error('Bearer token not found', 404);
             }
 
             //Get friends of this user
@@ -201,19 +185,12 @@ class CommentController extends Controller
                 if ($comment) {
                     $comment->delete();
 
-                    return response([
-                        'message' => 'Comment deleted successfully',
-                        'comment' => $comment
-                    ]);
+                    return response()->success($comment, 204);
                 } else {
-                    return response([
-                        'message' => 'You are not allowed to comment on this post'
-                    ], 404);
+                    return response()->error('You are not allowed to comment on this post', 401);
                 }
             } else {
-                return response([
-                    'message' => 'You are not allowed to comment on this post'
-                ], 404);
+                return response()->error('You are not allowed to comment on this post', 401);
             }
         } catch (Throwable $e) {
             return response(['message' => $e->getMessage()]);
@@ -238,7 +215,7 @@ class CommentController extends Controller
 
             $comments = Comment::where('user_id', $userId)->get();
 
-            return CommentResource::collection($comments);
+            return response()->success(CommentResource::collection($comments), 204);
         } catch (Throwable $e) {
             return response(['message' => $e->getMessage()]);
         }

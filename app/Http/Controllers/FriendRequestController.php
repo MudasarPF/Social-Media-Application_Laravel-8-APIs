@@ -27,24 +27,18 @@ class FriendRequestController extends Controller
             $userId = getUserId($request);
 
             if (!isset($getToken)) {
-                return response([
-                    'message' => 'Bearer token not found'
-                ]);
+                return response()->error('Bearer token not found', 404);
             }
 
             $userExists = User::where('id', $id)->first();
 
             if (!isset($userExists)) {
-                return response([
-                    'message' => 'Request receiver does not exist'
-                ]);
+                return response()->error('Request receiver does not exist', 404);
             }
 
             //User can not send request to itself
             if ($userId == $id) {
-                return response([
-                    'message' => 'You can not send request to yourself'
-                ]);
+                return response()->error('You can not send request to yourself', 404);
             }
 
             /* 
@@ -70,16 +64,12 @@ class FriendRequestController extends Controller
                     'status' => false
                 ]);
 
-                return response([
-                    'message' => 'Request sent to ' . $userExists->name
-                ]);
+                return response()->success('Request sent to ' . $userExists->name, 201);
             } else {
-                return response([
-                    'message' => 'Friend request is already pending'
-                ]);
+                return response()->error('Friend request is already pending');
             }
         } catch (Throwable $e) {
-            return response(['message' => $e->getMessage()]);
+            return response()->error($e->getMessage());
         }
     }
 
@@ -94,18 +84,14 @@ class FriendRequestController extends Controller
             $userId = getUserId($request);
 
             if (!isset($getToken)) {
-                return response([
-                    'message' => 'Bearer token not found'
-                ]);
+                return response()->error('Bearer token not found');
             }
 
             $requestsReceived =  ReceivedFriendRequest::all()->where('user_id', $userId);
             $requestsSent =  SentFriendRequest::all()->where('user_id', $userId);
 
             if ((json_decode($requestsReceived)) == null && (json_decode($requestsSent)) == null) {
-                return response([
-                    'message' => 'You have no friend requests'
-                ]);
+                return response()->error('You have no friend requests',404);
             } else {
                 return response([
                     'requests_sent' => RequestSentResource::collection($requestsSent),
@@ -113,7 +99,7 @@ class FriendRequestController extends Controller
                 ]);
             }
         } catch (Throwable $e) {
-            return response(['message' => $e->getMessage()]);
+            return response()->error($e->getMessage());
         }
     }
 
@@ -131,9 +117,7 @@ class FriendRequestController extends Controller
             $userId = getUserId($request);
 
             if (!isset($getToken)) {
-                return response([
-                    'message' => 'Bearer token not found'
-                ]);
+                return response()->error('Bearer token not found');
             }
 
             //Check if request has been received
@@ -146,9 +130,7 @@ class FriendRequestController extends Controller
             if (isset($requestsReceived)) {
 
                 if ($requestsReceived->status ==  true && $requestsSent->status == true) {
-                    return response([
-                        'message' => 'Request already accepted'
-                    ]);
+                    return response()->success('Request already accepted');
                 }
 
                 $requestsReceived->status = true;
@@ -160,16 +142,12 @@ class FriendRequestController extends Controller
                     $requestsSent->save();
                 }
 
-                return response([
-                    'message' => 'Request accepted'
-                ]);
+                return response()->success('Request accepted');
             } else {
-                return response([
-                    'message' => 'You are not allowed to perform this action'
-                ]);
+                return response()->error('You are not allowed to perform this action', 401);
             }
         } catch (Throwable $e) {
-            return response(['message' => $e->getMessage()]);
+            return response()->error($e->getMessage());
         }
     }
 
@@ -186,9 +164,7 @@ class FriendRequestController extends Controller
             $userId = getUserId($request);
 
             if (!isset($getToken)) {
-                return response([
-                    'message' => 'Bearer token not found'
-                ]);
+                return response()->error('Bearer token not found', 404);
             }
 
             $requestsReceived =  ReceivedFriendRequest::all()->where('user_id', $userId)->where('sender_id', $id)->where('status', false)->first();
@@ -203,9 +179,7 @@ class FriendRequestController extends Controller
                 $sentRequest =  SentFriendRequest::all()->where('user_id', $id)->first();
                 $sentRequest->delete();
 
-                return response([
-                    'message' => 'Request deleted'
-                ]);
+                return response()->success('Request deleted');
             }
 
             if (isset($requestsSent)) {
@@ -216,16 +190,12 @@ class FriendRequestController extends Controller
                 $receivedRequest =  ReceivedFriendRequest::all()->where('user_id', $id)->first();
                 $receivedRequest->delete();
 
-                return response([
-                    'message' => 'You have unsent the request'
-                ]);
+                return response()->success('You have unsent the request');
             }
 
-            return response([
-                'message' => 'No such request exists'
-            ]);
+            return response()->error('No such request exists', 404);
         } catch (Throwable $e) {
-            return response(['message' => $e->getMessage()]);
+            return response()->error($e->getMessage());
         }
     }
 
@@ -242,9 +212,7 @@ class FriendRequestController extends Controller
             $userId = getUserId($request);
 
             if (!isset($getToken)) {
-                return response([
-                    'message' => 'Bearer token not found'
-                ]);
+                return response()->error('Bearer token not found');
             }
 
             $requestsSent = SentFriendRequest::all()->where('user_id', $userId)->where('receiver_id', $id)->where('status', true)->first();
@@ -258,9 +226,7 @@ class FriendRequestController extends Controller
                 $sentRequest =  SentFriendRequest::all()->where('user_id', $id)->first();
                 $sentRequest->delete();
 
-                return response([
-                    'message' => 'You have removed a friend from your list'
-                ]);
+                return response()->success('You have removed a friend from your list');
             }
 
 
@@ -271,17 +237,13 @@ class FriendRequestController extends Controller
                 $receivedRequest =  ReceivedFriendRequest::all()->where('user_id', $id)->first();
                 $receivedRequest->delete();
 
-                return response([
-                    'message' => 'You have removed a friend from your list'
-                ]);
+                return response()->success('You have removed a friend from your list');
             }
 
 
-            return response([
-                'message' => 'No such friend exists'
-            ]);
+            return response()->error('No such friend exists');
         } catch (Throwable $e) {
-            return response(['message' => $e->getMessage()]);
+            return response()->error($e->getMessage());
         }
     }
 }

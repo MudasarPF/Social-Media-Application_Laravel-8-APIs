@@ -28,47 +28,6 @@ class AuthController extends Controller
      */
 
     /*
-        Function to create a JWT token
-        parameter: user_id
-    */
-    // function createToken($data)
-    // {
-    //     $key = config('constants.JWT_KEY');
-    //     $payload = array(
-    //         "iss" => "http://127.0.0.1:8000",
-    //         "aud" => "http://127.0.0.1:8000/api",
-    //         "iat" => time(),
-    //         "nbf" => 1357000000,
-    //         'exp' => time() + 3600,
-    //         "data" => $data,
-    //     );
-
-    //     $jwt = JWT::encode($payload, $key, config('constants.JWT_ALGORITHM'));
-
-    //     return $jwt;
-    // }
-
-    /*
-        Function to create a temporary JWT token that is used to
-        verify user's account
-        parameter: time()
-    */
-    // function createTempToken($data)
-    // {
-    //     $key = config('constants.JWT_KEY');
-    //     $payload = array(
-    //         "iss" => "http://127.0.0.1:8000",
-    //         "aud" => "http://127.0.0.1:8000/api",
-    //         "iat" => time(),
-    //         "nbf" => 1357000000,
-    //         'exp' => time() + 1000,
-    //         "data" => $data,
-    //     );
-
-    //     $jwt = JWT::encode($payload, $key, config('constants.JWT_ALGORITHM'));
-
-    //     return $jwt;
-    // }
 
     /*
         Function to create a new user
@@ -103,9 +62,9 @@ class AuthController extends Controller
             ];
 
             //Return HTTP 201 status, call was successful and something was created
-            return response($response, 201);
+            return response()->success($response, 201);
         } catch (Throwable $e) {
-            return response(['message' => $e->getMessage()]);
+            return response()->error($e->getMessage());
         }
     }
 
@@ -117,37 +76,34 @@ class AuthController extends Controller
     public function login(LoginRequest $request)
     {
         try {
+
             $fields = $request->validated();
 
             // Check email
             $user = User::where('email', $fields['email'])->first();
 
             if ($user == null) {
-                return response([
-                    'message' => 'User does not exist'
-                ]);
+                //By using ResponseServiceProvider
+                return response()->error('User does not exist');
             }
 
             if ($user->email_verified_at == null) {
-                return response([
-                    'message' => 'Your email is not confirmed'
-                ]);
+                //By using ResponseServiceProvider
+                return response()->error('Your email is not confirmed');
             }
 
             // Check password
             if (!$user || !Hash::check($fields['password'], $user->password)) {
-                return response([
-                    'message' => 'Invalid credentials'
-                ], 401);
+
+                return response()->error('Your email is not confirmed', 401);
             }
 
             //Check if user is already logged in
             $isLoggedIn = Token::where('user_id', $user->id)->first();
 
             if ($isLoggedIn) {
-                return response([
-                    'message' => 'User already logged-in'
-                ], 400);
+
+                return response()->error('User already logged-in');
             }
 
             $token = (new service)->createToken($user->id);
@@ -164,9 +120,10 @@ class AuthController extends Controller
                 'Token' => $token
             ];
 
-            return response($response, 201);
+            //By using ResponseServiceProvider
+            return response()->success($response, 201);
         } catch (Throwable $e) {
-            return response(['message' => $e->getMessage()]);
+            return response()->error($e->getMessage(),404);
         }
     }
 
@@ -177,7 +134,7 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         try {
-            //Get Bearer Token
+            //Get user id
             $getUserId = getUserId($request);
 
             $userExists = Token::where('user_id', $getUserId)->first();
@@ -185,18 +142,13 @@ class AuthController extends Controller
             if ($userExists) {
                 $userExists->delete();
             } else {
-                $message = [
-                    'message' => 'This user is already logged out'
-                ];
-
-                return response($message, 404);
+                //By using ResponseServiceProvider
+                return response()->error('This user is already logged out', 404);
             }
-
-            return [
-                'message' => 'Logout Succesfully'
-            ];
+            
+            return response()->success('Logout Succesfully', 404);
         } catch (Throwable $e) {
-            return response(['message' => $e->getMessage()]);
+            return response()->error($e->getMessage());
         }
     }
 
@@ -215,31 +167,24 @@ class AuthController extends Controller
             $userExists = User::where('email', $email)->first();
 
             if (!$userExists) {
-                return response([
-                    'message' => 'Something went wrong!'
-                ]);
+                return response()->error('Something went wrong!');
             }
 
             $userToken = $userExists->remember_token;
 
             if ($userToken != $token) {
-                return response([
-                    'message' => 'You are not authorized to use this link'
-                ]);
+                return response()->error('You are not authorized to use this link', 401);
             }
 
             if ($userExists->email_verified_at != null) {
-                return response([
-                    'message' => 'Your link has expired'
-                ]);
+                return response()->error('Your link has expired', 410);
             }
+
             $userExists->email_verified_at = time();
             $userExists->save();
-            return response([
-                'message' => 'Email Confirmed'
-            ]);
+            return response()->success('Email Confirmed', 201);
         } catch (Throwable $e) {
-            return response(['message' => $e->getMessage()]);
+            return response()->error($e->getMessage());
         }
     }
 }

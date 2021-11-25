@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use App\Models\Token;
+use App\Models\User;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 
@@ -34,7 +35,7 @@ class CAuth
         if($ifJSON != 'application/json')
         {
             return response([
-                'message' => 'API expects JSON data, set Accept Header as application/json'
+                'message' => 'API expects JSON data, set "Accept" Header as application/json'
             ]);
         }
 
@@ -44,9 +45,10 @@ class CAuth
         //Get Id
         $userId = $decoded->data;
 
-        //
-        $request = $request->merge(array('user_id' => $userId));
+        $user = User::where('id' , $userId)->first();
 
+        //Send user object along with $request variable
+        $request = $request->merge(array('user' => $user));
 
         $userExists = Token::where('user_id', $userId)->first();
 

@@ -20,6 +20,7 @@
 - Middleware
 - Custom resources
 - appropriate responses and status codes
+- Response Service Provider
 
 ## About Laravel
 

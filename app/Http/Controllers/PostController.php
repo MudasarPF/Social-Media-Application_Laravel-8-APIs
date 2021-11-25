@@ -38,10 +38,9 @@ class PostController extends Controller
             //Get Posts of friends
             $friendsPost = Post::whereIn('user_id', $sentRequests)->orwhereIn('user_id', $recievedRequests)->orwhere('user_id', $userId)->orwhere('privacy', false)->get();
 
-
-            return PostResource::collection($friendsPost);
+            return response()->success(PostResource::collection($friendsPost));
         } catch (Throwable $e) {
-            return response(['message' => $e->getMessage()]);
+            return response()->error($e->getMessage());
         }
     }
 
@@ -70,19 +69,15 @@ class PostController extends Controller
             if (in_array($author, $sentRequests) || in_array($author, $recievedRequests) || $author == $userId || $getPost->privacy == false) {
 
                 if (isset($getPost)) {
-                    return PostResource::collection($getPost);
+                    return response()->success(PostResource::collection($getPost));
                 } else {
-                    return response([
-                        'message' => 'No Post found'
-                    ], 404);
+                    return response()->error('No Post found' , 404);
                 }
             } else {
-                return response([
-                    'message' => 'You are not allowed to access this post'
-                ], 404);
+                return response()->error('You are not allowed to access this post' , 401);
             }
         } catch (Throwable $e) {
-            return response(['message' => $e->getMessage()]);
+            return response()->error($e->getMessage());
         }
     }
 
@@ -117,7 +112,7 @@ class PostController extends Controller
                 ]);
             }
         } catch (Throwable $e) {
-            return response(['message' => $e->getMessage()]);
+            return response()->error($e->getMessage());
         }
     }
 
@@ -152,14 +147,12 @@ class PostController extends Controller
                     $post->privacy = $request->privacy;
                 }
 
-                return PostResource::collection($post);
+                return response()->success(PostResource::collection($post));
             } else {
-                return response([
-                    'message' => 'You are not authorized to perform this action'
-                ]);
+                return response()->error('You are not authorized to perform this action' , 401);
             }
         } catch (Throwable $e) {
-            return response(['message' => $e->getMessage()]);
+            return response()->error($e->getMessage());
         }
     }
 
@@ -177,18 +170,14 @@ class PostController extends Controller
             $post = Post::where('user_id', $userId)->where('id', $id)->first();
 
             if (!$post) {
-                return response([
-                    'message' => 'You are not authorized to perform this action'
-                ]);
+                return response()->error('You are not authorized to perform this action' , 401);
             }
 
             $post->delete();
 
-            return response([
-                'message' => 'Post Deleted Succesfully'
-            ]);
+            return response()->success('Post Deleted Succesfully');
         } catch (Throwable $e) {
-            return response(['message' => $e->getMessage()]);
+            return response()->error($e->getMessage());
         }
     }
 
@@ -200,9 +189,9 @@ class PostController extends Controller
         $request->validated();
 
         try {
-            return PostResource::collection(Post::where('title', 'like', '%' . $title . '%')->get());
+            return response()->success(PostResource::collection(Post::where('title', 'like', '%' . $title . '%')->get()));
         } catch (Throwable $e) {
-            return response(['message' => $e->getMessage()]);
+            return response()->error($e->getMessage());
         }
     }
 
@@ -226,9 +215,7 @@ class PostController extends Controller
             $post = Post::where('user_id', $userId)->where('id', $id)->first();
 
             if (!$post) {
-                return response([
-                    'message' => 'You are not authorized to perform this action'
-                ]);
+                return response()->error('You are not authorized to perform this action' , 401);
             }
 
             $post->privacy = $request->privacy;
@@ -245,7 +232,7 @@ class PostController extends Controller
                 ]);
             }
         } catch (Throwable $e) {
-            return response(['message' => $e->getMessage()]);
+            return response()->error($e->getMessage());
         }
     }
 }
